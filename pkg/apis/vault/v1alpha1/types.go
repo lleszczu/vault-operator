@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -73,6 +74,15 @@ type VaultServiceSpec struct {
 
 	// TLS policy of vault nodes
 	TLS *TLSPolicy `json:"TLS,omitempty"`
+
+	// sidecar unsealer container
+	Sidecar *SidecarContainer `json:"sidecar,omitempty"`
+}
+
+type SidecarContainer struct {
+	Image string `json:"image"`
+	Command []string `json:"command,omitempty"`
+	Envs []corev1.EnvVar `json:"envs,omitempty"`
 }
 
 // PodPolicy defines the policy for pods owned by vault operator.

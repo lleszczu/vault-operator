@@ -227,6 +227,15 @@ func statsdExporterContainer() v1.Container {
 	}
 }
 
+func unsealerContainer(v *api.VaultService) v1.Container {
+	return v1.Container{
+		Name: "vault-unsealer",
+		Image: v.Spec.Sidecar.Image,
+		Env: v.Spec.Sidecar.Envs,
+		Command: v.Spec.Sidecar.Command,
+	}
+}
+
 // DeployVault deploys a vault service.
 // DeployVault is a multi-steps process. It creates the deployment, the service and
 // other related Kubernetes objects for Vault. Any intermediate step can fail.
@@ -236,13 +245,17 @@ func statsdExporterContainer() v1.Container {
 func DeployVault(kubecli kubernetes.Interface, v *api.VaultService) error {
 	selector := LabelsForVault(v.GetName())
 
+	containers := []v1.Container{ vaultContainer(v), statsdExporterContainer()}
+	if v.Spec.Sidecar != nil {
+		containers = append(containers, unsealerContainer(v))
+	}
 	podTempl := v1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   v.GetName(),
 			Labels: selector,
 		},
 		Spec: v1.PodSpec{
-			Containers: []v1.Container{vaultContainer(v), statsdExporterContainer()},
+			Containers: containers,
 			Volumes: []v1.Volume{{
 				Name: vaultConfigVolName,
 				VolumeSource: v1.VolumeSource{
