@@ -1,0 +1,28 @@
+apiVersion: "vault.security.coreos.com/v1alpha1"
+kind: "VaultService"
+metadata:
+  name: "vault-cluster"
+  namespace: kube-system
+spec:
+  nodes: 3
+  version: "0.9.1-1"
+  sidecar:
+    image: quay.io/jetstack/vault-unsealer:canary
+    command:
+    - /usr/local/bin/vault-unsealer
+    - unseal
+    - --mode
+    - aws-kms-ssm
+    - --secret-shares
+    - "5"
+    - --secret-threshold
+    - "3"
+    - --aws-kms-key-id
+    - <put_key_id>
+    - --aws-ssm-key-prefix
+    - <put_ssm_prefix>
+    envs:
+    - name: AWS_REGION
+      value: <put_aws_region>
+    - name: VAULT_SKIP_VERIFY
+      value: "true"
